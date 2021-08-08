@@ -9,8 +9,16 @@
   copies or substantial portions of the Software.
 */
 
-#include <esp_now.h>
-#include <WiFi.h>
+
+#ifdef ESP32
+  #include <WiFi.h>
+  #include <esp_now.h>
+  #define BOARD "ESP32"
+#else
+  #include <ESP8266WiFi.h>
+  #include <espnow.h>
+  #define BOARD "ESP12"
+#endif
 
 // REPLACE WITH YOUR RECEIVER MAC Address
 uint8_t broadcastAddress[] = {0x08, 0x3A, 0xF2, 0x50, 0xA4, 0x90};
@@ -76,7 +84,7 @@ void loop() {
   strcpy(myData.a, "THIS IS A CHAR");
   myData.b = random(1,20);
   myData.c = 1.32;
-  myData.d = "Hello";
+  myData.d = "Hello from " + BOARD;
   myData.e = false;
 
   // Send message via ESP-NOW

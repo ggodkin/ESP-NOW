@@ -21,7 +21,8 @@
 #endif
 
 // REPLACE WITH YOUR RECEIVER MAC Address
-uint8_t broadcastAddress[] = {0x08, 0x3A, 0xF2, 0x50, 0xA4, 0x90};
+//uint8_t broadcastAddress[] = {0x08, 0x3A, 0xF2, 0x50, 0xA4, 0x90}; //ESP32
+uint8_t broadcastAddress[] = {0xb4, 0xe6, 0x2d, 0x6a, 0x83, 0xa7}; //ESP12
 
 #define LED_PIN       LED_BUILTIN 
 
@@ -84,7 +85,7 @@ void loop() {
   strcpy(myData.a, "THIS IS A CHAR");
   myData.b = random(1,20);
   myData.c = 1.32;
-  myData.d = "Hello from " + BOARD;
+  myData.d = "Hello"; // + BOARD;
   myData.e = false;
 
   // Send message via ESP-NOW

@@ -10,7 +10,7 @@ Anthony Elder
  */
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
-#include <credentials.h>
+#include <home_wifi_multi.h>  //#include <credentials.h>
 extern "C" {
   #include "user_interface.h"
   #include <espnow.h>
@@ -27,26 +27,26 @@ extern "C" {
  * Note: the point of setting a specific MAC is so you can replace this Gateway ESP8266 device with a new one
  * and the new gateway will still pick up the remote sensors which are still sending to the old MAC 
  */
-uint8_t mac[] = {0x36, 0x33, 0x33, 0x33, 0x33, 0x33};
+uint8_t mac[] =  MAC1;  //{0x36, 0x33, 0x33, 0x33, 0x33, 0x33};
 void initVariant() {
   //wifi_set_macaddr(SOFTAP_IF, &mac[0]);
 }
 
 #ifdef CREDENTIALS
-char *ssid      = mySSID;               // Set you WiFi SSID
-char *password  = myPASSWORD;               // Set you WiFi password
+char *ssid      = SSID1;               // Set you WiFi SSID
+char *password  = PWD1;               // Set you WiFi password
 #else
 char *ssid      = "";               // Set you WiFi SSID
 char *password  = "";               // Set you WiFi password
 #endif
 
-IPAddress server(192, 168, 0, 203);
+IPAddress server(mqttServer1);
 
 // the X's get replaced with the remote sensor device mac address
 const char deviceTopic[] = "ESPNOW/";
 
 WiFiClient wifiClient;
-PubSubClient client(server, 1883, wifiClient);
+PubSubClient client(server, mqttPort1, wifiClient);
 
 String deviceMac;
 
@@ -181,5 +181,3 @@ void reconnectMQTT() {
     }
   }
 }
-
-

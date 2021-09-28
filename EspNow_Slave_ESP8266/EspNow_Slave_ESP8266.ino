@@ -42,6 +42,7 @@ char *password  = "";               // Set you WiFi password
 
 IPAddress server(mqttServer1);
 
+
 // the X's get replaced with the remote sensor device mac address
 const char deviceTopic[] = "ESPNOW/";
 

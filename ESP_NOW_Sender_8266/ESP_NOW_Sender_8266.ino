@@ -19,20 +19,17 @@
   #include <espnow.h>
   #define BOARD "ESP12"
 #endif
+#include <home_wifi_multi.h> 
 
 // REPLACE WITH RECEIVER MAC Address
-uint8_t broadcastAddress[] = {0x08, 0x3A, 0xF2, 0x50, 0xA4, 0x90};
+uint8_t broadcastAddress[] = MAC1;
 
 #define LED_PIN       LED_BUILTIN 
 
 // Structure example to send data
 // Must match the receiver structure
 typedef struct struct_message {
-  char a[32];
-  int b;
-  float c;
-  String d;
-  bool e;
+  char a[240];
 } struct_message;
 
 // Create a struct_message called myData
@@ -81,10 +78,6 @@ void loop() {
   if ((millis() - lastTime) > timerDelay) {
     // Set values to send
     strcpy(myData.a, BOARD);
-    myData.b = random(1,20);
-    myData.c = 1.12;
-    myData.d = "Hello"; // from " || BOARD;
-    myData.e = false;
 
    digitalWrite(LED_PIN, LOW);
 

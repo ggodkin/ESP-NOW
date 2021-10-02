@@ -96,6 +96,7 @@ void loop() {
   }
 
   if (haveReading) {
+    Serial.println("Have Reading");
     haveReading = false;
     wifiConnect();
     reconnectMQTT();

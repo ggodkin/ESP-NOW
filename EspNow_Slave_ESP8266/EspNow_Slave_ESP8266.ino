@@ -27,8 +27,9 @@ extern "C" {
  * Note: the point of setting a specific MAC is so you can replace this Gateway ESP8266 device with a new one
  * and the new gateway will still pick up the remote sensors which are still sending to the old MAC 
  */
-uint8_t mac[] =  MAC1;  //{0x36, 0x33, 0x33, 0x33, 0x33, 0x33};
+//uint8_t mac[] =  MAC1;  //{0x36, 0x33, 0x33, 0x33, 0x33, 0x33};
 void initVariant() {
+  //WiFi.mode(WIFI_AP);
   //wifi_set_macaddr(SOFTAP_IF, &mac[0]);
 }
 
@@ -88,6 +89,9 @@ void setup() {
 void loop() {
   if (millis()-heartBeat > 30000) {
     Serial.println("Waiting for ESP-NOW messages...");
+    Serial.println();
+    Serial.print("Loop - ESP Board MAC Address:  ");
+    Serial.println(WiFi.macAddress());
     heartBeat = millis();
   }
 

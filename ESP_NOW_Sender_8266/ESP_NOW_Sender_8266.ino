@@ -22,7 +22,7 @@
 #include <home_wifi_multi.h> 
 
 // REPLACE WITH RECEIVER MAC Address
-uint8_t broadcastAddress[] = MAC1;
+uint8_t broadcastAddress[] = {0x2C,0xF4,0x32,0x20,0x5D,0x1C}; //MAC1;
 
 #define LED_PIN       LED_BUILTIN 
 

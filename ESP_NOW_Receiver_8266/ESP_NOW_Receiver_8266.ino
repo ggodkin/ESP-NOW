@@ -15,9 +15,7 @@
 // Structure example to receive data
 // Must match the sender structure
 typedef struct struct_message {
-  int devID;
-  int sensorID;
-  float sensorValue;
+   char testdata[240];
 } struct_message;
 
 // Create a struct_message called myData
@@ -28,12 +26,8 @@ void OnDataRecv(uint8_t * mac, uint8_t *incomingData, uint8_t len) {
   memcpy(&myData, incomingData, sizeof(myData));
   Serial.print("Bytes received: ");
   Serial.println(len);
-  Serial.print("devID: ");
-  Serial.println(myData.devID);
-  Serial.print("sensorID: ");
-  Serial.println(myData.sensorID);
-  Serial.print("sensorValue: ");
-  Serial.println(myData.sensorValue);
+  Serial.print("testdata: ");
+  Serial.println(myData.testdata);
 }
  
 void setup() {

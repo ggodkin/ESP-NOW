@@ -11,6 +11,12 @@
 
 #include <ESP8266WiFi.h>
 #include <espnow.h>
+#include <PubSubClient.h>
+#include <home_wifi_multi.h> 
+
+#define SENDTOPIC "ESPNow/key"
+#define COMMANDTOPIC "ESPNow/command"
+#define SERVICETOPIC "ESPNow/service"
 
 // Structure example to receive data
 // Must match the sender structure
@@ -21,6 +27,15 @@ typedef struct struct_message {
 // Create a struct_message called myData
 struct_message myData;
 
+#ifdef CREDENTIALS
+char *ssid      = SSID1;               // Set you WiFi SSID
+char *password  = PWD1;               // Set you WiFi password
+#else
+char *ssid      = "";               // Set you WiFi SSID
+char *password  = "";               // Set you WiFi password
+#endif
+
+IPAddress server(mqttServer1);
 // Callback function that will be executed when data is received
 void OnDataRecv(uint8_t * mac, uint8_t *incomingData, uint8_t len) {
   memcpy(&myData, incomingData, sizeof(myData));

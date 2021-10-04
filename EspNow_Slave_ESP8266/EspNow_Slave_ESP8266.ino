@@ -33,13 +33,9 @@ void initVariant() {
   //wifi_set_macaddr(SOFTAP_IF, &mac[0]);
 }
 
-#ifdef CREDENTIALS
 char *ssid      = SSID1;               // Set you WiFi SSID
 char *password  = PWD1;               // Set you WiFi password
-#else
-char *ssid      = "";               // Set you WiFi SSID
-char *password  = "";               // Set you WiFi password
-#endif
+
 
 IPAddress server(mqttServer1);
 
@@ -48,7 +44,7 @@ IPAddress server(mqttServer1);
 const char deviceTopic[] = "ESPNOW/";
 
 WiFiClient wifiClient;
-PubSubClient client(server, mqttPort1, wifiClient);
+PubSubClient client(server, 1883, wifiClient);
 
 String deviceMac;
 
@@ -77,7 +73,7 @@ void setup() {
   Serial.println("ESP_Now Controller");
     Serial.println();
 
-  WiFi.mode(WIFI_AP);
+  WiFi.mode(WIFI_STA);
   Serial.print("This node AP mac: "); Serial.println(WiFi.softAPmacAddress());
   Serial.print("This node STA mac: "); Serial.println(WiFi.macAddress());
 
@@ -94,16 +90,24 @@ void loop() {
     Serial.println(WiFi.macAddress());
     heartBeat = millis();
   }
+/*  
+Serial.print("Milis: ");
+Serial.println(millis());
+Serial.print("haveReading: ");
+Serial.println(haveReading);
+*/
 
-  if (haveReading) {
+  if (haveReading == 1) {
     Serial.println("Have Reading");
     haveReading = false;
     wifiConnect();
     reconnectMQTT();
     sendToNodeRed();
     client.disconnect();
+    Serial.println("Disconnected");
     delay(200);
-    ESP.restart(); // <----- Reboots to re-enable ESP-NOW
+    //ESP.restart(); // <----- Reboots to re-enable ESP-NOW
+    initEspNow();
   }
 }
 
@@ -117,13 +121,28 @@ void sendToNodeRed() {
   publishMQTT(SENDTOPIC,payload);
 }
 
+void OnDataRecv(uint8_t * mac, uint8_t *incomingData, uint8_t len) {
+  memcpy(&sensorData, incomingData, sizeof(sensorData));
+  Serial.print("Bytes received: ");
+  Serial.println(len);
+  Serial.print("testdata: ");
+  Serial.println(sensorData.testdata);
+  haveReading = true;
+  Serial.print("haveReading: ");
+  Serial.println(haveReading);
+
+}
+
 void initEspNow() {
   if (esp_now_init()!=0) {
     Serial.println("*** ESP_Now init failed");
     ESP.restart();
   }
 
-  esp_now_set_self_role(ESP_NOW_ROLE_COMBO);
+  esp_now_set_self_role(ESP_NOW_ROLE_SLAVE);
+  esp_now_register_recv_cb(OnDataRecv);
+/*  esp_now_set_self_role(ESP_NOW_ROLE_COMBO);
+  esp_now_set_self_role(ESP_NOW_ROLE_SLAVE);
 
   esp_now_register_recv_cb([](uint8_t *mac, uint8_t *data, uint8_t len) {
 
@@ -145,6 +164,7 @@ void initEspNow() {
 
     haveReading = true;
   });
+  */
 }
 
 void wifiConnect() {
@@ -172,7 +192,7 @@ void reconnectMQTT() {
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
     // Attempt to connect
-    if (client.connect("Mailbox", "admin", "admin")) {
+    if (client.connect("Mailbox",  mqttUser1, mqttPassword1)) {
       Serial.println("connected");
       // Once connected, publish an announcement...
       client.publish(SERVICETOPIC, "I am live");

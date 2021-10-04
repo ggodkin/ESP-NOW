@@ -28,14 +28,21 @@ typedef struct struct_message {
 struct_message myData;
 
 #ifdef CREDENTIALS
-char *ssid      = SSID1;               // Set you WiFi SSID
-char *password  = PWD1;               // Set you WiFi password
+  char *ssid      = SSID1;               // Set you WiFi SSID
+  char *password  = PWD1;               // Set you WiFi password
 #else
-char *ssid      = "";               // Set you WiFi SSID
-char *password  = "";               // Set you WiFi password
+  char *ssid      = "";               // Set you WiFi SSID
+  char *password  = "";               // Set you WiFi password
 #endif
 
+WiFiClient wifiClient;
+PubSubClient client(server, mqttPort1, wifiClient);
+
 IPAddress server(mqttServer1);
+
+volatile boolean haveReading = false;
+int heartBeat;
+
 // Callback function that will be executed when data is received
 void OnDataRecv(uint8_t * mac, uint8_t *incomingData, uint8_t len) {
   memcpy(&myData, incomingData, sizeof(myData));

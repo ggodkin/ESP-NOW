@@ -8,19 +8,14 @@
 https://github.com/HarringayMakerSpace/ESP-Now
 Anthony Elder
  */
+#include <Wire.h>
 #include <ESP8266WiFi.h>
-#include <PubSubClient.h>
 #include <home_wifi_multi.h>  //#include <credentials.h>
+
 extern "C" {
   #include "user_interface.h"
   #include <espnow.h>
 }
-
-
-//-------- Customise the above values --------
-#define SENDTOPIC "ESPNow/key"
-#define COMMANDTOPIC "ESPNow/command"
-#define SERVICETOPIC "ESPNow/service"
 
 /* Set a private Mac Address
  *  http://serverfault.com/questions/40712/what-range-of-mac-addresses-can-i-safely-use-for-my-virtual-machines
@@ -36,15 +31,7 @@ void initVariant() {
 char *ssid      = SSID1;               // Set you WiFi SSID
 char *password  = PWD1;               // Set you WiFi password
 
-
-IPAddress server(mqttServer1);
-
-
-// the X's get replaced with the remote sensor device mac address
-const char deviceTopic[] = "ESPNOW/";
-
 WiFiClient wifiClient;
-PubSubClient client(server, 1883, wifiClient);
 
 String deviceMac;
 
@@ -67,75 +54,55 @@ int heartBeat;
 
 
 void setup() {
-  Serial.begin(115200); 
-  Serial.println();
-  Serial.println();
-  Serial.println("ESP_Now Controller");
-    Serial.println();
+  //Serial.begin(115200); 
+  //Serial.println();
+  //Serial.println("ESP_Now Controller");
+  //Serial.println();
 
   WiFi.mode(WIFI_STA);
-  Serial.print("This node AP mac: "); Serial.println(WiFi.softAPmacAddress());
-  Serial.print("This node STA mac: "); Serial.println(WiFi.macAddress());
+//  Serial.print("This node AP mac: "); Serial.println(WiFi.softAPmacAddress());
+  //Serial.print("This node STA mac: "); Serial.println(WiFi.macAddress());
+  Wire.begin(1, 2); /* join i2c bus with SDA=D1 and SCL=D2 of NodeMCU */
 
   initEspNow();  
-  Serial.println("Setup done");
+  //Serial.println("Setup done");
 }
 
 
 void loop() {
   if (millis()-heartBeat > 30000) {
-    Serial.println("Waiting for ESP-NOW messages...");
-    Serial.println();
-    Serial.print("Loop - ESP Board MAC Address:  ");
-    Serial.println(WiFi.macAddress());
+    //Serial.println("Waiting for ESP-NOW messages...");
+    //Serial.println();
+    //Serial.print("Loop - ESP Board MAC Address:  ");
+    //Serial.println(WiFi.macAddress());
     heartBeat = millis();
   }
-/*  
-Serial.print("Milis: ");
-Serial.println(millis());
-Serial.print("haveReading: ");
-Serial.println(haveReading);
-*/
 
   if (haveReading == 1) {
-    Serial.println("Have Reading");
+    //Serial.println("Have Reading");
     haveReading = false;
-    wifiConnect();
-    reconnectMQTT();
-    sendToNodeRed();
-    client.disconnect();
-    Serial.println("Disconnected");
-    delay(200);
-    //ESP.restart(); // <----- Reboots to re-enable ESP-NOW
-    initEspNow();
+    //Send I2C
+    Wire.beginTransmission(2);
+    Wire.write(sensorData.testdata);
+    Wire.endTransmission();
   }
-}
-
-void sendToNodeRed() {
-
-  Serial.println(sensorData.testdata);
-  String payload = "{";
-  payload += "\"test\":\"" + String(sensorData.testdata);
-  payload += "\"}";
-  Serial.println(payload);
-  publishMQTT(SENDTOPIC,payload);
 }
 
 void OnDataRecv(uint8_t * mac, uint8_t *incomingData, uint8_t len) {
   memcpy(&sensorData, incomingData, sizeof(sensorData));
-  Serial.print("Bytes received: ");
-  Serial.println(len);
-  Serial.print("testdata: ");
-  Serial.println(sensorData.testdata);
+  //Serial.print("Bytes received: ");
+  //Serial.println(len);
+  //Serial.print("testdata: ");
+  //Serial.println(sensorData.testdata);
   haveReading = true;
-  Serial.print("haveReading: ");
-  Serial.println(haveReading);
+  //Serial.print("haveReading: ");
+  //Serial.println(haveReading);
 
 }
 
 void initEspNow() {
   if (esp_now_init()!=0) {
-    Serial.println("*** ESP_Now init failed");
+    //Serial.println("*** ESP_Now init failed");
     ESP.restart();
   }
 
@@ -165,45 +132,4 @@ void initEspNow() {
     haveReading = true;
   });
   */
-}
-
-void wifiConnect() {
-  WiFi.mode(WIFI_STA);
-  Serial.println();
-  Serial.print("Connecting to "); Serial.print(ssid);
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-     delay(250);
-     Serial.print(".");
-  }  
-  Serial.print("\nWiFi connected, IP address: "); Serial.println(WiFi.localIP());
-}
-
-void publishMQTT(String topic, String message) {
-  Serial.println("Publish");
-  if (!client.connected()) {
-    reconnectMQTT();
-  }
-  client.publish(SENDTOPIC, message.c_str());
-}
-
-void reconnectMQTT() {
-  Serial.println(" Loop until we're reconnected");
-  while (!client.connected()) {
-    Serial.print("Attempting MQTT connection...");
-    // Attempt to connect
-    if (client.connect("Mailbox",  mqttUser1, mqttPassword1)) {
-      Serial.println("connected");
-      // Once connected, publish an announcement...
-      client.publish(SERVICETOPIC, "I am live");
-      // ... and resubscribe
-      //  client.subscribe("inTopic");
-    } else {
-      Serial.print("failed, rc = ");
-      Serial.print(client.state());
-      Serial.println(" try again in 5 seconds");
-      // Wait 5 seconds before retrying
-      delay(5000);
-    }
-  }
 }

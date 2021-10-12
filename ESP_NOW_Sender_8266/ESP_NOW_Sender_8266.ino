@@ -9,6 +9,19 @@
   copies or substantial portions of the Software.
 */
 
+#define DEBUG 0
+
+#if DEBUG == 2
+  #define debugln(x) Serial1.println(x)
+  #define LED_PIN      11 
+#elif DEBUG == 1
+  #define debugln(x) Serial.println(x) 
+  #define LED_PIN       LED_BUILTIN 
+#else
+  #define debugln(x)
+  #define LED_PIN       LED_BUILTIN 
+#endif
+  
 
 #ifdef ESP32
   #include <WiFi.h>
@@ -24,7 +37,6 @@
 // REPLACE WITH RECEIVER MAC Address
 uint8_t broadcastAddress[] = {0x2C,0xF4,0x32,0x20,0x5D,0x1C}; //MAC1;
 
-#define LED_PIN       LED_BUILTIN 
 
 // Structure example to send data
 // Must match the receiver structure
@@ -34,6 +46,7 @@ typedef struct struct_message {
 
 // Create a struct_message called myData
 struct_message myData;
+String sendMsg;
 
 unsigned long lastTime = 0;  
 unsigned long timerDelay = 2000;  // send readings timer
@@ -42,10 +55,11 @@ unsigned long timerDelay = 2000;  // send readings timer
 void OnDataSent(uint8_t *mac_addr, uint8_t sendStatus) {
   Serial.print("Last Packet Send Status: ");
   if (sendStatus == 0){
-    Serial.println("Delivery success");
+    debugln("Delivery success S1");
   }
   else{
     Serial.println("Delivery fail");
+    debugln("Delivery fail S1");
     digitalWrite(LED_PIN, HIGH);
   }
 }
@@ -53,6 +67,7 @@ void OnDataSent(uint8_t *mac_addr, uint8_t sendStatus) {
 void setup() {
   // Init Serial Monitor
   Serial.begin(115200);
+  Serial1.begin(115200);
 
   pinMode(LED_PIN, OUTPUT);
  

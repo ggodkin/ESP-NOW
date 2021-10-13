@@ -34,6 +34,27 @@
 #endif
 #include <home_wifi_multi.h> 
 
+//Deep Sleep time in microseconds
+#define sleepTime 60e6
+
+#include <Wire.h>              // Wire library (required for I2C devices)
+#include <Adafruit_BMP280.h>   // Adafruit BMP280 sensor library
+#define BMP280_I2C_ADDRESS  0x76
+
+#include <OneWire.h>
+#include <DallasTemperature.h>
+
+// GPIO where the DS18B20 is connected to
+const int oneWireBus = D7;  
+
+// Setup a oneWire instance to communicate with any OneWire devices
+OneWire oneWire(oneWireBus);
+
+// Pass our oneWire reference to Dallas Temperature sensor 
+DallasTemperature sensors(&oneWire);
+
+Adafruit_BMP280  bmp280;
+
 // REPLACE WITH RECEIVER MAC Address
 uint8_t broadcastAddress[] = {0x2C,0xF4,0x32,0x20,0x5D,0x1C}; //MAC1;
 
@@ -49,7 +70,7 @@ struct_message myData;
 String sendMsg;
 
 unsigned long lastTime = 0;  
-unsigned long timerDelay = 2000;  // send readings timer
+unsigned long timerDelay = 10000;  // send readings timer
 
 // Callback when data is sent
 void OnDataSent(uint8_t *mac_addr, uint8_t sendStatus) {
@@ -87,18 +108,48 @@ void setup() {
   
   // Register peer
   esp_now_add_peer(broadcastAddress, ESP_NOW_ROLE_SLAVE, 1, NULL, 0);
+
+  // Start the DS18B20 sensor
+  sensors.begin();
+  
+  bmp280.begin(BMP280_I2C_ADDRESS);
 }
  
 void loop() {
-  if ((millis() - lastTime) > timerDelay) {
+ // if ((millis() - lastTime) > timerDelay) {
+    
+    float temp = bmp280.readTemperature();   // get temperature
+    float pres = bmp280.readPressure();      // get pressure
+
+    sensors.requestTemperatures(); 
+    float temperatureC = sensors.getTempCByIndex(0);
+    float temperatureF = sensors.getTempFByIndex(0);
+
     // Set values to send
-    strcpy(myData.a, BOARD);
+    strcpy(myData.a,BOARD);
+    strcat(myData.a,"-2|temp|");
+    char result[8];
+    dtostrf(temp, 6, 2, result);
+    strcat(myData.a,result);
+    strcat(myData.a,"|pres|");
+    dtostrf(pres, 6, 2, result);
+    strcat(myData.a,result);
+    
+    strcat(myData.a,"|tempC|");
+    dtostrf(temperatureC, 6, 2, result);
+    strcat(myData.a,result);
+    strcat(myData.a,"|tempF|");
+    dtostrf(temperatureF, 6, 2, result);
+    strcat(myData.a,result);
+    
 
    digitalWrite(LED_PIN, LOW);
 
     // Send message via ESP-NOW
     esp_now_send(broadcastAddress, (uint8_t *) &myData, sizeof(myData));
+
+    ESP.deepSleep(sleepTime);
     
     lastTime = millis();
-  }
+  //}
 }

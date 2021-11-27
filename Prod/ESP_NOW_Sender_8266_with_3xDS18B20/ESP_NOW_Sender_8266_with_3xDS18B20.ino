@@ -75,6 +75,8 @@ DallasTemperature sensors(&oneWire);
 uint8_t sensorAir[8] = { 0x28, 0xEE, 0xD5, 0x64, 0x1A, 0x16, 0x02, 0xEC };
 uint8_t sensorEarth2[8] = { 0x28, 0x61, 0x64, 0x12, 0x3C, 0x7C, 0x2F, 0x27 };
 uint8_t sensorEarth6[8] = { 0x28, 0x71, 0xD6, 0x88, 0x62, 0x20, 0x01, 0xC3 };
+float temperatureC;
+float temperatureF;
 
 DeviceAddress tempDeviceAddress;
 
@@ -149,24 +151,39 @@ void loop() {
  // if ((millis() - lastTime) > timerDelay) {
     
     sensors.setResolution(12);
-    sensors.getAddress(tempDeviceAddress, 0);
+    //sensors.getAddress(tempDeviceAddress, 0);
     sensors.requestTemperatures(); 
     float temperatureC = sensors.getTempC(sensorEarth6);
-    float temperatureF = sensors.getTempFByIndex(0);
+    float temperatureF = sensors.getTempF(sensorEarth6);
 
     // Set values to send
     strcpy(myData.a,BOARD);
     char result[8];
     
-    strcat(myData.a,"|tempC|");
+    strcat(myData.a,"|Earth6C|");
     dtostrf(temperatureC, 6, 2, result);
     strcat(myData.a,result);
-    strcat(myData.a,"|tempF|");
+    strcat(myData.a,"|Earth6F|");
     dtostrf(temperatureF, 6, 2, result);
     strcat(myData.a,result);
-    strcat(myData.a,"|MAC|");
-    //strcat(myData.a,(char *) tempDeviceAddress[0]);
-
+ 
+    temperatureC = sensors.getTempC(sensorEarth2);
+    temperatureF = sensors.getTempF(sensorEarth6);
+    strcat(myData.a,"|Earth2C|");
+    dtostrf(temperatureC, 6, 2, result);
+    strcat(myData.a,result);
+    strcat(myData.a,"|Earth2F|");
+    dtostrf(temperatureF, 6, 2, result);
+    strcat(myData.a,result);
+ 
+    temperatureC = sensors.getTempC(sensorAir);
+    temperatureF = sensors.getTempF(sensorAir);
+    strcat(myData.a,"|AirC|");
+    dtostrf(temperatureC, 6, 2, result);
+    strcat(myData.a,result);
+    strcat(myData.a,"|AirF|");
+    dtostrf(temperatureF, 6, 2, result);
+    strcat(myData.a,result);
     
     debug("DS18B20 Temp: ");
     debugln(temperatureC);  debug("*C\t and "); 

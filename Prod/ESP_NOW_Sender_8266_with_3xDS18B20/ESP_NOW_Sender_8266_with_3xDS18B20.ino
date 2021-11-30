@@ -20,7 +20,7 @@
   copies or substantial portions of the Software.
 */
 
-#define DEBUG 1
+#define DEBUG 0
 
 #if DEBUG == 2
   #define debugln(x) Serial1.println(x)
@@ -35,11 +35,12 @@
   #define serial Serial
   #define LED_PIN       LED_BUILTIN 
 #else
+  #define serial true
   #define debugln(x)
   #define debug(x)
   #define debugBegin(x)
-
-  #define LED_PIN       LED_BUILTIN 
+  #define LED_PIN       99
+   
 #endif
   
 
@@ -55,7 +56,7 @@
 #include <home_wifi_multi.h> 
 
 //Deep Sleep time in microseconds
-#define sleepTime 10e6
+#define sleepTime 900e6
 
 //#include <Wire.h>              // Wire library (required for I2C devices)
 
@@ -72,8 +73,8 @@ OneWire oneWire(oneWireBus);
 // Pass our oneWire reference to Dallas Temperature sensor 
 DallasTemperature sensors(&oneWire);
 
-uint8_t sensorAir[8] = { 0x28, 0xEE, 0xD5, 0x64, 0x1A, 0x16, 0x02, 0xEC };
-uint8_t sensorEarth2[8] = { 0x28, 0x61, 0x64, 0x12, 0x3C, 0x7C, 0x2F, 0x27 };
+uint8_t sensorAir[8] = { 0x28, 0x7D, 0xF4, 0xF8, 0x57, 0x20, 0x01, 0x86 };
+uint8_t sensorEarth2[8] = { 0x28, 0x7D, 0x8E, 0x6F, 0x62, 0x20, 0x01, 0xDA };
 uint8_t sensorEarth6[8] = { 0x28, 0x71, 0xD6, 0x88, 0x62, 0x20, 0x01, 0xC3 };
 float temperatureC;
 float temperatureF;
@@ -152,30 +153,46 @@ void loop() {
     
     sensors.setResolution(12);
     //sensors.getAddress(tempDeviceAddress, 0);
-    sensors.requestTemperatures(); 
-    float temperatureC = sensors.getTempC(sensorEarth6);
-    float temperatureF = sensors.getTempF(sensorEarth6);
+     
 
     // Set values to send
     strcpy(myData.a,BOARD);
     char result[8];
-    
+
+    sensors.requestTemperatures();
+    temperatureC = sensors.getTempC(sensorEarth6);
+    temperatureF = sensors.getTempF(sensorEarth6);
+
     strcat(myData.a,"|Earth6C|");
     dtostrf(temperatureC, 6, 2, result);
     strcat(myData.a,result);
     strcat(myData.a,"|Earth6F|");
     dtostrf(temperatureF, 6, 2, result);
     strcat(myData.a,result);
+
+    debug("DS18B20 Temp Earth 6: ");
+    debugln(temperatureC);  debug("*C\t and "); 
+    debug(temperatureF); debugln("*F.");
+    //printAddress( tempDeviceAddress);
+    //strAddress(tempDeviceAddress);
  
+    sensors.requestTemperatures();
     temperatureC = sensors.getTempC(sensorEarth2);
-    temperatureF = sensors.getTempF(sensorEarth6);
+    temperatureF = sensors.getTempF(sensorEarth2);
     strcat(myData.a,"|Earth2C|");
     dtostrf(temperatureC, 6, 2, result);
     strcat(myData.a,result);
     strcat(myData.a,"|Earth2F|");
     dtostrf(temperatureF, 6, 2, result);
     strcat(myData.a,result);
- 
+
+    debug("DS18B20 Temp Earth 2: ");
+    debugln(temperatureC);  debug("*C\t and "); 
+    debug(temperatureF); debugln("*F.");
+    //printAddress( tempDeviceAddress);
+    //strAddress(tempDeviceAddress);
+
+    sensors.requestTemperatures();
     temperatureC = sensors.getTempC(sensorAir);
     temperatureF = sensors.getTempF(sensorAir);
     strcat(myData.a,"|AirC|");
@@ -185,11 +202,11 @@ void loop() {
     dtostrf(temperatureF, 6, 2, result);
     strcat(myData.a,result);
     
-    debug("DS18B20 Temp: ");
+    debug("DS18B20 Temp Air: ");
     debugln(temperatureC);  debug("*C\t and "); 
     debug(temperatureF); debugln("*F.");
-    printAddress( tempDeviceAddress);
-    strAddress(tempDeviceAddress);
+    //printAddress( tempDeviceAddress);
+
     
     digitalWrite(LED_PIN, LOW);
 

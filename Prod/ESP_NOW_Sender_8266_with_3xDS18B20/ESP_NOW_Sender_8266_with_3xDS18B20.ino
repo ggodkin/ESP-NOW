@@ -20,7 +20,7 @@
   copies or substantial portions of the Software.
 */
 
-#define DEBUG 0
+#define DEBUG 1
 
 #if DEBUG == 2
   #define debugln(x) Serial1.println(x)
@@ -28,19 +28,24 @@
   #define debugBegin(x) Serial1.begin(x)
   #define serial Serial1
   #define LED_PIN      11 
+  //Deep Sleep time in microseconds
+  #define sleepTime 120e6  //2min
 #elif DEBUG == 1
   #define debugln(x) Serial.println(x) 
   #define debug(x) Serial.print(x) 
   #define debugBegin(x) Serial.begin(x)
   #define serial Serial
   #define LED_PIN       LED_BUILTIN 
+  //Deep Sleep time in microseconds
+  #define sleepTime 120e6  //2min
 #else
   #define serial true
   #define debugln(x)
   #define debug(x)
   #define debugBegin(x)
   #define LED_PIN       99
-   
+  //Deep Sleep time in microseconds
+  #define sleepTime 900e6  //15min
 #endif
   
 
@@ -55,8 +60,7 @@
 #endif
 #include <home_wifi_multi.h> 
 
-//Deep Sleep time in microseconds
-#define sleepTime 900e6
+
 
 //#include <Wire.h>              // Wire library (required for I2C devices)
 
@@ -76,8 +80,6 @@ DallasTemperature sensors(&oneWire);
 uint8_t sensorAir[8] = { 0x28, 0x7D, 0xF4, 0xF8, 0x57, 0x20, 0x01, 0x86 };
 uint8_t sensorEarth2[8] = { 0x28, 0x7D, 0x8E, 0x6F, 0x62, 0x20, 0x01, 0xDA };
 uint8_t sensorEarth6[8] = { 0x28, 0x71, 0xD6, 0x88, 0x62, 0x20, 0x01, 0xC3 };
-float temperatureC;
-float temperatureF;
 
 DeviceAddress tempDeviceAddress;
 
@@ -96,9 +98,7 @@ struct_message myData;
 String sendMsg;
 
 unsigned long lastTime = 0;  
-unsigned long timerDelay = 10000;  // send readings timer
-
-float temperatureAir, temperatureGround2, temperatureGround6;
+#define unsigned long timerDelay = 10000;  // send readings timer
 
 // Callback when data is sent
 void OnDataSent(uint8_t *mac_addr, uint8_t sendStatus) {
@@ -149,8 +149,12 @@ void setup() {
 }
  
 void loop() {
- // if ((millis() - lastTime) > timerDelay) {
+  // if ((millis() - lastTime) > timerDelay) {
     
+    float temperatureC;
+    float temperatureF;
+    float temperatureAir, temperatureGround2, temperatureGround6;
+
     sensors.setResolution(12);
     //sensors.getAddress(tempDeviceAddress, 0);
      

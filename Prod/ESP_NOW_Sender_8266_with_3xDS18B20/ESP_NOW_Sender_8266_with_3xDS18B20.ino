@@ -175,7 +175,7 @@ void loop() {
     strcat(myData.a,result);
 
     debug("DS18B20 Temp Earth 6: ");
-    debugln(temperatureC);  debug("*C\t and "); 
+    debug(temperatureC);  debug("*C\t and "); 
     debug(temperatureF); debugln("*F.");
     //printAddress( tempDeviceAddress);
     //strAddress(tempDeviceAddress);
@@ -191,7 +191,7 @@ void loop() {
     strcat(myData.a,result);
 
     debug("DS18B20 Temp Earth 2: ");
-    debugln(temperatureC);  debug("*C\t and "); 
+    debug(temperatureC);  debug("*C\t and "); 
     debug(temperatureF); debugln("*F.");
     //printAddress( tempDeviceAddress);
     //strAddress(tempDeviceAddress);
@@ -207,7 +207,7 @@ void loop() {
     strcat(myData.a,result);
     
     debug("DS18B20 Temp Air: ");
-    debugln(temperatureC);  debug("*C\t and "); 
+    debug(temperatureC);  debug("*C\t and "); 
     debug(temperatureF); debugln("*F.");
     //printAddress( tempDeviceAddress);
 

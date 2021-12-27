@@ -20,14 +20,14 @@
   copies or substantial portions of the Software.
 */
 
-#define DEBUG 1
+#define DEBUG 0
 
 #if DEBUG == 2
   #define debugln(x) Serial1.println(x)
   #define debug(x) Serial1.print(x)
   #define debugBegin(x) Serial1.begin(x)
   #define serial Serial1
-  #define LED_PIN      11 
+  #define LED_PIN      99 
   //Deep Sleep time in microseconds
   #define sleepTime 120e6  //2min
 #elif DEBUG == 1
@@ -122,24 +122,34 @@ void setup() {
   debugln("Set Up");
 
   pinMode(LED_PIN, OUTPUT);
+  pinMode(D6, OUTPUT);
  
   // Set device as a Wi-Fi Station
-  WiFi.mode(WIFI_STA);
-
-  // Init ESP-NOW
-  if (esp_now_init() != 0) {
-    debugln("Error initializing ESP-NOW");
-    return;
-  }
-  debugln("WiFi initialized");
-  
-  // Once ESPNow is successfully Init, we will register for Send CB to
-  // get the status of Trasnmitted packet
-  esp_now_set_self_role(ESP_NOW_ROLE_CONTROLLER);
-  esp_now_register_send_cb(OnDataSent);
-  
-  // Register peer
-  esp_now_add_peer(broadcastAddress, ESP_NOW_ROLE_SLAVE, 1, NULL, 0);
+//  WiFi.mode(WIFI_STA);
+////  while (WiFi.status() != WL_CONNECTED) { // Wait for the Wi-Fi to connect
+////    //debugln("Connecting to WiFi...");
+////    //TODO if counter grreater than threshold go to deep sleep
+////  }
+//  debug("WiFi.status(): ");
+//  debugln(WiFi.status());
+//
+//  // Init ESP-NOW
+//  if (esp_now_init() != 0) {
+//    debugln("Error initializing ESP-NOW");
+//    return;
+//  }
+//  debugln("WiFi and ESP-NOW initialized");
+//  debug(" Time: ");
+//  debugln(millis());
+//
+//  
+//  // Once ESPNow is successfully Init, we will register for Send CB to
+//  // get the status of Trasnmitted packet
+//  esp_now_set_self_role(ESP_NOW_ROLE_CONTROLLER);
+//  esp_now_register_send_cb(OnDataSent);
+//  
+//  // Register peer
+//  esp_now_add_peer(broadcastAddress, ESP_NOW_ROLE_SLAVE, 1, NULL, 0);
 
 
   // Start the DS18B20 sensor
@@ -154,6 +164,11 @@ void loop() {
     float temperatureC;
     float temperatureF;
     float temperatureAir, temperatureGround2, temperatureGround6;
+    long ellapsedTime = millis();
+    float batVolt;
+    digitalWrite(D6, LOW);
+    debug("Loop Enter Time: ");
+    debugln(ellapsedTime);
 
     sensors.setResolution(12);
     //sensors.getAddress(tempDeviceAddress, 0);
@@ -165,7 +180,7 @@ void loop() {
 
     sensors.requestTemperatures();
     temperatureC = sensors.getTempC(sensorEarth6);
-    temperatureF = sensors.getTempF(sensorEarth6);
+    temperatureF = temperatureC * 1.8 + 32; //sensors.getTempF(sensorEarth6);
 
     strcat(myData.a,"|Earth6C|");
     dtostrf(temperatureC, 6, 2, result);
@@ -182,7 +197,7 @@ void loop() {
  
     sensors.requestTemperatures();
     temperatureC = sensors.getTempC(sensorEarth2);
-    temperatureF = sensors.getTempF(sensorEarth2);
+    temperatureF = temperatureC * 1.8 + 32; //sensors.getTempF(sensorEarth2);
     strcat(myData.a,"|Earth2C|");
     dtostrf(temperatureC, 6, 2, result);
     strcat(myData.a,result);
@@ -198,7 +213,7 @@ void loop() {
 
     sensors.requestTemperatures();
     temperatureC = sensors.getTempC(sensorAir);
-    temperatureF = sensors.getTempF(sensorAir);
+    temperatureF = temperatureC * 1.8 + 32;  //sensors.getTempF(sensorAir);
     strcat(myData.a,"|AirC|");
     dtostrf(temperatureC, 6, 2, result);
     strcat(myData.a,result);
@@ -211,12 +226,56 @@ void loop() {
     debug(temperatureF); debugln("*F.");
     //printAddress( tempDeviceAddress);
 
-    
+    ellapsedTime = millis();
+    debug("Temp collected Time: ");
+    debugln(ellapsedTime);    
     digitalWrite(LED_PIN, LOW);
 
+    batVolt = analogRead(A0);
+    digitalWrite(D6, HIGH);
+    batVolt = batVolt * 5 / 1000;
+    debug("Battery Voltage :");
+    debugln(batVolt);
+    strcat(myData.a,"|ButV|");
+    dtostrf(batVolt, 6, 2, result);
+    strcat(myData.a,result);
+    ellapsedTime = millis();
+    debug("Battery Voltage collected Time: ");
+    debugln(ellapsedTime);    
+    
+  WiFi.mode(WIFI_STA);
+//  while (WiFi.status() != WL_CONNECTED) { // Wait for the Wi-Fi to connect
+//    //debugln("Connecting to WiFi...");
+//    //TODO if counter grreater than threshold go to deep sleep
+//  }
+  debug("WiFi.status(): ");
+  debugln(WiFi.status());
+
+  // Init ESP-NOW
+  if (esp_now_init() != 0) {
+    debugln("Error initializing ESP-NOW");
+    return;
+  }
+  debugln("WiFi and ESP-NOW initialized");
+  debug(" Time: ");
+  debugln(millis());
+
+  
+  // Once ESPNow is successfully Init, we will register for Send CB to
+  // get the status of Trasnmitted packet
+  esp_now_set_self_role(ESP_NOW_ROLE_CONTROLLER);
+  esp_now_register_send_cb(OnDataSent);
+  
+  // Register peer
+  esp_now_add_peer(broadcastAddress, ESP_NOW_ROLE_SLAVE, 1, NULL, 0);
+  
     // Send message via ESP-NOW
     esp_now_send(broadcastAddress, (uint8_t *) &myData, sizeof(myData));
-
+    
+    ellapsedTime = millis();
+    debug("Loop Exit Time: ");
+    debugln(ellapsedTime);
+    
     ESP.deepSleep(sleepTime);
     
     lastTime = millis();

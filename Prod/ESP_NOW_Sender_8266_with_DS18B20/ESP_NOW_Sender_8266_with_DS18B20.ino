@@ -13,7 +13,7 @@
   copies or substantial portions of the Software.
 */
 
-#define DEBUG 1
+#define DEBUG 0
 
 #if DEBUG == 2
   #define debugln(x) Serial1.println(x)

@@ -13,7 +13,11 @@
   copies or substantial portions of the Software.
 */
 
-#define DEBUG 0
+#define TEMP_POWER D5
+#define ADC_GND D6
+#define TEMP_DATA D7
+
+#define DEBUG 1
 
 #if DEBUG == 2
   #define debugln(x) Serial1.println(x)
@@ -31,6 +35,14 @@
   #define LED_PIN       LED_BUILTIN 
   //Deep Sleep time in microseconds
   #define sleepTime 120e6  //2min
+#elif DEBUG == 4
+  #define debugln(x) Serial.println(x) 
+  #define debug(x) Serial.print(x) 
+  #define debugBegin(x) Serial.begin(x)
+  #define serial Serial
+  #define LED_PIN       LED_BUILTIN 
+  //Deep Sleep time in microseconds
+  #define sleepTime 30e6  //30 sec
 #else
   #define serial true
   #define debugln(x)
@@ -50,7 +62,11 @@
   #include <ESP8266WiFi.h>
   #include <espnow.h>
   //#define BOARD "ESP12WineCellar"
-  #define BOARD "ESP12MultiSensor"
+  #if  DEBUG == 4
+    #define BOARD "ESP12BatteryTester"
+  #else
+    #define BOARD "ESP12MultiSensor"
+  #endif
 #endif
 #include <home_wifi_multi.h> 
 
@@ -63,7 +79,7 @@
 
 
 // GPIO where the DS18B20 is connected to
-const int oneWireBus = D7;  
+const int oneWireBus = TEMP_DATA;  
 
 // Setup a oneWire instance to communicate with any OneWire devices
 OneWire oneWire(oneWireBus);
@@ -116,7 +132,11 @@ void setup() {
   debugln("Set Up");
 
   pinMode(LED_PIN, OUTPUT);
-  pinMode(D6, OUTPUT);
+  pinMode(TEMP_POWER, OUTPUT);
+  pinMode(ADC_GND, OUTPUT);
+  
+  digitalWrite(TEMP_POWER, HIGH);
+  delay(100);
  
 
   // Start the DS18B20 sensor
@@ -135,7 +155,7 @@ void loop() {
   float temperatureAir;
   long ellapsedTime = millis();
   float batVolt;
-  digitalWrite(D6, LOW);
+  digitalWrite(ADC_GND, LOW);
   debug("Loop Enter Time: ");
   debugln(ellapsedTime);
 
@@ -171,11 +191,12 @@ void loop() {
   }
   ellapsedTime = millis();
   debug("Temp collected Time: ");
-  debugln(ellapsedTime);    
+  debugln(ellapsedTime); 
+  digitalWrite(TEMP_POWER, LOW);   
   digitalWrite(LED_PIN, LOW);
 
   batVolt = analogRead(A0);
-  digitalWrite(D6, HIGH);
+  digitalWrite(ADC_GND, HIGH);
   batVolt = batVolt * 5 / 1000;
   debug("Battery Voltage :");
   debugln(batVolt);

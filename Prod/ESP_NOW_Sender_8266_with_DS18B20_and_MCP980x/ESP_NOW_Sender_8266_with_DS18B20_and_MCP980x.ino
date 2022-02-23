@@ -24,6 +24,8 @@ HS300xlib hs300x;
 
 // Create the MCP9808 temperature sensor object
 Adafruit_MCP9808 tempsensor = Adafruit_MCP9808();
+Adafruit_MCP9808 tempsensor2 = Adafruit_MCP9808();
+Adafruit_MCP9808 tempsensor3 = Adafruit_MCP9808();
 
 #define TEMP_POWER D5
 #define ADC_GND D6
@@ -175,6 +177,14 @@ void setup() {
     debugln("Couldn't find MCP9808! Check your connections and verify the address is correct.");
     while (1);
   }
+  if (!tempsensor2.begin(0x1A)) {
+    debugln("Couldn't find MCP9804 2! Check your connections and verify the address is correct.");
+    while (1);
+  }
+  if (!tempsensor3.begin(0x19)) {
+    debugln("Couldn't find MCP9804 3! Check your connections and verify the address is correct.");
+    while (1);
+  }
     
    debugln("Found MCP9808!");
 
@@ -243,6 +253,30 @@ void loop() {
   temperatureF = tempsensor.readTempF();
   tempsensor.shutdown_wake(1); // shutdown MSP9808 - power consumption ~0.1 mikro Ampere, stops temperature sampling
   strcat(myData.a,"|MCP980x");
+  strcat(myData.a,"|TempC|");
+  dtostrf(temperatureC, 6, 2, result);
+  strcat(myData.a,result);
+  strcat(myData.a,"|TempF|");
+  dtostrf(temperatureF, 6, 2, result);
+  strcat(myData.a,result);
+
+  tempsensor2.wake();   // wake up, ready to read!
+  temperatureC = tempsensor2.readTempC();
+  temperatureF = tempsensor2.readTempF();
+  tempsensor2.shutdown_wake(1); // shutdown MSP9808 - power consumption ~0.1 mikro Ampere, stops temperature sampling
+  strcat(myData.a,"|MCP980x2");
+  strcat(myData.a,"|TempC|");
+  dtostrf(temperatureC, 6, 2, result);
+  strcat(myData.a,result);
+  strcat(myData.a,"|TempF|");
+  dtostrf(temperatureF, 6, 2, result);
+  strcat(myData.a,result);
+
+  tempsensor3.wake();   // wake up, ready to read!
+  temperatureC = tempsensor3.readTempC();
+  temperatureF = tempsensor3.readTempF();
+  tempsensor3.shutdown_wake(1); // shutdown MSP9808 - power consumption ~0.1 mikro Ampere, stops temperature sampling
+  strcat(myData.a,"|MCP980x3");
   strcat(myData.a,"|TempC|");
   dtostrf(temperatureC, 6, 2, result);
   strcat(myData.a,result);

@@ -13,11 +13,23 @@
   copies or substantial portions of the Software.
 */
 
+
+#include <Wire.h>
+#include "Adafruit_MCP9808.h"
+#include <HS300xlib.h>
+
+//Create HS300x object
+HS300xlib hs300x; 
+
+
+// Create the MCP9808 temperature sensor object
+Adafruit_MCP9808 tempsensor = Adafruit_MCP9808();
+
 #define TEMP_POWER D5
 #define ADC_GND D6
 #define TEMP_DATA D7
 
-#define DEBUG 0
+#define DEBUG 1
 
 #if DEBUG == 2
   #define debugln(x) Serial1.println(x)
@@ -69,20 +81,15 @@
   #elif  DEBUG == 2
     #define BOARD "ESP12MultiSensorTest2"
   #elif  DEBUG == 1
-    #define BOARD "ESP12MultiSensorTest1"
+    #define BOARD "MST1"
   #else
     #define BOARD "ESP12MultiSensor"
   #endif
 #endif
 #include <home_wifi_multi.h> 
 
-
-
-//#include <Wire.h>              // Wire library (required for I2C devices)
-
 #include <OneWire.h>
 #include <DallasTemperature.h>
-
 
 // GPIO where the DS18B20 is connected to
 const int oneWireBus = TEMP_DATA;  
@@ -150,6 +157,35 @@ void setup() {
   devCount = sensors.getDeviceCount();
   debug("Sensors count: ");
   debugln(devCount);  
+  
+  // Make sure the sensor is found, you can also pass in a different i2c
+  // address with tempsensor.begin(0x19) for example, also can be left in blank for default address use
+  // Also there is a table with all addres possible for this sensor, you can connect multiple sensors
+  // to the same i2c bus, just configure each sensor with a different address and define multiple objects for that
+  //  A2 A1 A0 address
+  //  0  0  0   0x18  this is the default address
+  //  0  0  1   0x19
+  //  0  1  0   0x1A
+  //  0  1  1   0x1B
+  //  1  0  0   0x1C
+  //  1  0  1   0x1D
+  //  1  1  0   0x1E
+  //  1  1  1   0x1F
+  if (!tempsensor.begin(0x18)) {
+    debugln("Couldn't find MCP9808! Check your connections and verify the address is correct.");
+    while (1);
+  }
+    
+   debugln("Found MCP9808!");
+
+  tempsensor.setResolution(3); // sets the resolution mode of reading, the modes are defined in the table bellow:
+  // Mode Resolution SampleTime
+  //  0    0.5°C       30 ms
+  //  1    0.25°C      65 ms
+  //  2    0.125°C     130 ms
+  //  3    0.0625°C    250 ms
+
+  
   debugln("setup completed");
 }
  
@@ -159,6 +195,7 @@ void loop() {
   float temperatureC;
   float temperatureF;
   float temperatureAir;
+  float humidity;
   long ellapsedTime = millis();
   float batVolt;
   digitalWrite(ADC_GND, LOW);
@@ -200,6 +237,40 @@ void loop() {
   debugln(ellapsedTime); 
   digitalWrite(TEMP_POWER, LOW);   
   digitalWrite(LED_PIN, LOW);
+
+  tempsensor.wake();   // wake up, ready to read!
+  temperatureC = tempsensor.readTempC();
+  temperatureF = tempsensor.readTempF();
+  tempsensor.shutdown_wake(1); // shutdown MSP9808 - power consumption ~0.1 mikro Ampere, stops temperature sampling
+  strcat(myData.a,"|MCP980x");
+  strcat(myData.a,"|TempC|");
+  dtostrf(temperatureC, 6, 2, result);
+  strcat(myData.a,result);
+  strcat(myData.a,"|TempF|");
+  dtostrf(temperatureF, 6, 2, result);
+  strcat(myData.a,result);
+
+  ellapsedTime = millis();
+  debug("Temp MCP980x collected Time: ");
+  debugln(ellapsedTime); 
+
+  int8_t respon = hs300x.MeasurementReq();
+  if(respon){
+    temperatureC = hs300x.getTemperatureC();
+    temperatureF = temperatureC * 1.8 + 32;
+    humidity = hs300x.getHumidity();
+    strcat(myData.a,"|Hs300x");
+    strcat(myData.a,"|TempC|");
+    dtostrf(temperatureC, 6, 2, result);
+    strcat(myData.a,result);
+    strcat(myData.a,"|TempF|");
+    dtostrf(temperatureF, 6, 2, result);
+    strcat(myData.a,result);
+    strcat(myData.a,"|Humid|");
+    dtostrf(humidity, 6, 2, result);
+    strcat(myData.a,result);
+  }
+
 
   batVolt = analogRead(A0);
   digitalWrite(ADC_GND, HIGH);

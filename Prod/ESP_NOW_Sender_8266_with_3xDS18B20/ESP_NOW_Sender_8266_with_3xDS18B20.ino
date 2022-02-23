@@ -236,7 +236,7 @@ void loop() {
     batVolt = batVolt * 5 / 1000;
     debug("Battery Voltage :");
     debugln(batVolt);
-    strcat(myData.a,"|ButV|");
+    strcat(myData.a,"|BatV|");
     dtostrf(batVolt, 6, 2, result);
     strcat(myData.a,result);
     ellapsedTime = millis();
